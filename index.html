@@ -695,7 +695,9 @@
 // DATA
 // ============================================================
 let assets = JSON.parse(localStorage.getItem('porto_assets') || '[]');
-let prices = {};
+let prices = {};      // harga dalam IDR (dihitung dari pricesUSD * usdIdr saat render)
+let pricesUSD = {};   // harga USD mentah dari CoinGecko — TIDAK pernah dihapus, hanya diupdate
+let pricesChg = {};   // % change 24h per simbol
 let usdIdr  = 16400; // Apr 2025 fallback
 let activeTab  = 'all';
 let editMode   = false;
@@ -763,6 +765,16 @@ let stockPrices  = {};
 // ============================================================
 // FETCH PRICES
 // ============================================================
+// Rebuild prices IDR dari pricesUSD yang sudah disimpan + usdIdr terkini
+function rebuildPricesIDR() {
+  for (const [sym, usd] of Object.entries(pricesUSD)) {
+    prices[sym] = usd * usdIdr;
+  }
+  for (const [sym, chg] of Object.entries(pricesChg)) {
+    prices[sym + '_chg'] = chg;
+  }
+}
+
 async function fetchPrices() {
   // 1. USD/IDR
   try {
@@ -774,7 +786,8 @@ async function fetchPrices() {
     }
   } catch(e) {}
 
-  // 2. Crypto via CoinGecko (with change 24h)
+  // 2. Crypto via CoinGecko — simpan USD mentah ke pricesUSD
+  // Data lama TIDAK dihapus jika fetch gagal; hanya key yang berhasil yang diupdate
   try {
     const ids = Object.keys(CRYPTO_MAP).join(',');
     const r = await fetch(
@@ -785,12 +798,15 @@ async function fetchPrices() {
       const d = await r.json();
       for (const [id, sym] of Object.entries(CRYPTO_MAP)) {
         if (d[id]?.usd) {
-          prices[sym] = d[id].usd * usdIdr;
-          prices[sym + '_chg'] = d[id].usd_24h_change || 0;
+          pricesUSD[sym] = d[id].usd;
+          pricesChg[sym] = d[id].usd_24h_change || 0;
         }
       }
     }
   } catch(e) {}
+
+  // Konversi semua pricesUSD -> IDR dengan usdIdr terbaru
+  rebuildPricesIDR();
 
   // 3. Gold
   await fetchGoldPrice();
@@ -798,6 +814,8 @@ async function fetchPrices() {
   updateLastUpdate();
   renderAll();
 }
+
+let goldUSDperGram = 0; // harga emas USD/gram — hanya diupdate jika fetch berhasil
 
 async function fetchGoldPrice() {
   // Source A: goldprice.org
@@ -807,8 +825,9 @@ async function fetchGoldPrice() {
       const d = await r.json();
       const usdPerOz = d?.items?.[0]?.xauPrice;
       if (usdPerOz > 1000) {
-        goldPriceIDR = (usdPerOz / 31.1035) * usdIdr;
-        prices['XAU'] = goldPriceIDR;
+        goldUSDperGram = usdPerOz / 31.1035; // simpan USD/gram
+        goldPriceIDR   = goldUSDperGram * usdIdr;
+        prices['XAU']  = goldPriceIDR;
         return;
       }
     }
@@ -820,13 +839,18 @@ async function fetchGoldPrice() {
       const d = await r.json();
       const usdPerOz = d?.['pax-gold']?.usd;
       if (usdPerOz > 1000) {
-        goldPriceIDR = (usdPerOz / 31.1035) * usdIdr;
-        prices['XAU'] = goldPriceIDR;
+        goldUSDperGram    = usdPerOz / 31.1035;
+        goldPriceIDR      = goldUSDperGram * usdIdr;
+        prices['XAU']     = goldPriceIDR;
         prices['XAU_chg'] = d?.['pax-gold']?.usd_24h_change || 0;
         return;
       }
     }
   } catch(e) {}
+  // Jika kedua fetch gagal: gunakan goldUSDperGram yang sudah ada (atau fallback)
+  if (goldUSDperGram > 0) {
+    goldPriceIDR = goldUSDperGram * usdIdr; // recalc dengan usdIdr terbaru
+  }
   prices['XAU'] = goldPriceIDR;
 }
 
