@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porto — Manajemen Aset</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* === PURPLE-BLUE-WHITE-YELLOW PALETTE === */
+    --bg:        #09090f;
+    --surface:   #0f0f1a;
+    --surface2:  #161625;
+    --surface3:  #1c1c32;
+    --border:    rgba(120,100,255,0.12);
+    --border2:   rgba(120,100,255,0.25);
+    --text:      #f4f4ff;
+    --text2:     #c8c8e8;
+    --muted:     #6e6e9a;
+    --subtle:    #2e2e52;
+
+    /* Accent palette */
+    --violet:    #7c5cfc;
+    --violet2:   #9b7fff;
+    --violet-bg: rgba(124,92,252,0.12);
+    --blue:      #3b82f6;
+    --blue2:     #60a5fa;
+    --blue-bg:   rgba(59,130,246,0.10);
+    --yellow:    #f5c842;
+    --yellow2:   #fde68a;
+    --yellow-bg: rgba(245,200,66,0.10);
+    --cyan:      #22d3ee;
+    --green:     #34d399;
+    --red:       #f87171;
+    --pink:      #e879f9;
+
+    --r: 16px;
+    --r2: 12px;
+    --r3: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse 800px 500px at 0% 0%, rgba(124,92,252,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 400px at 100% 100%, rgba(59,130,246,0.07) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+
+  /* === LAYOUT === */
+  .app {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 20px 120px;
+  }
+
+  /* === HEADER === */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+    box-shadow: 0 4px 20px rgba(124,92,252,0.4);
+  }
+  .logo-text {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .logo-text span { color: var(--violet2); }
+  .header-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .live-badge {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.3px;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.35;} }
+
+  /* === TICKER BAR === */
+  .ticker-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 10px 0;
+    margin-bottom: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  .ticker-bar::before, .ticker-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 60px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .ticker-bar::before { left: 0; background: linear-gradient(to right, var(--surface), transparent); }
+  .ticker-bar::after  { right:0; background: linear-gradient(to left,  var(--surface), transparent); }
+  .ticker-scroll {
+    display: flex; gap: 0;
+    animation: ticker 60s linear infinite;
+    white-space: nowrap;
+  }
+  .ticker-scroll:hover { animation-play-state: paused; }
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0 20px;
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .ticker-name {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .ticker-price { color: var(--text); font-weight: 500; }
+  .ticker-chg.up   { color: var(--green); font-size: 11px; }
+  .ticker-chg.down { color: var(--red);   font-size: 11px; }
+
+  /* === TOTAL CARD === */
+  .total-card {
+    background: linear-gradient(135deg,
+      rgba(124,92,252,0.18) 0%,
+      rgba(59,130,246,0.12) 50%,
+      rgba(124,92,252,0.10) 100%);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 30px 32px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .total-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(124,92,252,0.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .total-card::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .total-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .total-value {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .total-meta {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .total-change {
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .total-change.pos { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+  .total-change.neg { background: rgba(248,113,113,0.15); color: var(--red);   border: 1px solid rgba(248,113,113,0.2); }
+  .last-update { font-size: 12.5px; color: var(--muted); }
+
+  /* === CHART SECTION === */
+  .chart-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 580px) { .chart-section { grid-template-columns: 1fr; } }
+
+  .chart-card, .perf-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 22px;
+  }
+  .card-title {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  .donut-wrap {
+    position: relative;
+    width: 148px; height: 148px;
+    margin: 0 auto 20px;
+  }
+  #donutChart { width: 100%; height: 100%; }
+  .donut-center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .donut-center .dc-label { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+  .donut-center .dc-val { font-size: 20px; font-weight: 700; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  .legend { display: flex; flex-direction: column; gap: 6px; }
+  .legend-item {
+    display: flex; align-items: center; gap: 9px;
+    border-radius: var(--r3); padding: 4px 6px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .legend-item:hover { background: var(--surface2); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+  .legend-name { flex: 1; font-size: 13.5px; color: var(--text2); }
+  .legend-pct { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--muted); }
+
+  .bar-list { display: flex; flex-direction: column; gap: 14px; }
+  .bar-item { display: flex; flex-direction: column; gap: 6px; }
+  .bar-header { display: flex; justify-content: space-between; align-items: center; }
+  .bar-name { font-size: 13.5px; color: var(--text2); }
+  .bar-val { font-size: 13px; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+  .bar-track {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 2px;
+    transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* === TABS === */
+  .tabs {
+    display: flex; gap: 3px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 5px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex: 1; min-width: fit-content;
+    padding: 9px 14px;
+    border: none; background: transparent;
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13.5px; font-weight: 500;
+    border-radius: var(--r3);
+    cursor: pointer; transition: all 0.2s;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--violet-bg), var(--blue-bg));
+    color: var(--violet2);
+    border: 1px solid var(--border2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    font-weight: 600;
+  }
+  .tab-icon { font-size: 14px; }
+
+  /* === ASSETS HEADER === */
+  .assets-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .assets-title { font-size: 15px; color: var(--muted); font-weight: 500; }
+  .btn-add {
+    display: flex; align-items: center; gap: 6px;
+    padding: 9px 18px;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    color: #fff;
+    border: none;
+    border-radius: var(--r3);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 16px rgba(124,92,252,0.35);
+    letter-spacing: 0.2px;
+  }
+  .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-add:active { transform: translateY(0); }
+
+  /* === ASSET CARD === */
+  .asset-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 16px 18px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    cursor: pointer;
+    position: relative;
+  }
+  .asset-card:hover {
+    border-color: var(--border2);
+    background: var(--surface2);
+    transform: translateX(2px);
+  }
+  .asset-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .asset-name { font-size: 15.5px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .asset-sub  { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .asset-right { text-align: right; }
+  .asset-value {
+    font-size: 15.5px; font-weight: 600;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 3px;
+  }
+  .asset-change { font-size: 12.5px; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+  .neu { color: var(--muted); }
+
+  .asset-actions {
+    position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%);
+    display: none; gap: 6px;
+  }
+  .asset-card:hover .asset-actions { display: flex; }
+  .asset-value-wrap { display: flex; flex-direction: column; align-items: flex-end; }
+  .btn-icon {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 13px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn-icon:hover { background: var(--surface2); }
+  .btn-icon.del:hover { background: rgba(248,113,113,0.12); border-color: var(--red); }
+
+  /* === SECTION DIVIDER === */
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--subtle);
+    margin: 20px 0 8px;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* === SAVINGS CARD === */
+  .savings-info {
+    background: linear-gradient(135deg, rgba(245,200,66,0.08), rgba(245,164,66,0.04));
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: var(--r2);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .savings-info .si-icon { font-size: 24px; }
+  .savings-info .si-text { flex: 1; }
+  .savings-info .si-rate { font-size: 15px; color: var(--yellow); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .savings-info .si-label { font-size: 11.5px; color: var(--muted); letter-spacing: 0.3px; }
+  .savings-info .si-earned { font-size: 16px; font-family: 'JetBrains Mono', monospace; color: var(--yellow); font-weight: 600; }
+
+  /* === EMPTY STATE === */
+  .empty { text-align: center; padding: 52px 20px; color: var(--muted); }
+  .empty .e-icon { font-size: 38px; margin-bottom: 14px; opacity: 0.4; }
+  .empty p { font-size: 15px; line-height: 1.7; }
+
+  /* === MODAL === */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 28px;
+    width: 100%; max-width: 440px;
+    animation: slideUp 0.25s ease;
+    max-height: 92vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,92,252,0.1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 24px; color: var(--text); }
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    display: block; margin-bottom: 8px; font-weight: 600;
+  }
+  .form-input, .form-select {
+    width: 100%; padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r3);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(124,92,252,0.15);
+  }
+  .form-select option { background: var(--surface2); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-cancel {
+    flex: 1; padding: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r3);
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+  .btn-save {
+    flex: 2; padding: 12px;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    border: none; border-radius: var(--r3);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s;
+    box-shadow: 0 4px 14px rgba(124,92,252,0.3);
+  }
+  .btn-save:hover { opacity: 0.88; }
+  .form-hint { font-size: 12px; color: var(--muted); margin-top: 5px; font-style: italic; }
+
+  /* === TOAST === */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--r2);
+    padding: 13px 24px;
+    font-size: 14.5px; z-index: 200;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* === SCROLLBAR === */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--subtle); border-radius: 2px; }
+
+  /* === MOBILE === */
+  @media (max-width: 420px) {
+    .total-value { font-size: 32px; }
+    .app { padding: 18px 14px 100px; }
+    .total-card { padding: 22px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">P</div>
+      <div class="logo-text">porto<span>.</span>ku</div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><span class="dot"></span><span id="rateLabel">USD/IDR —</span></div>
+    </div>
+  </header>
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
+    <div class="ticker-scroll" id="tickerScroll"><!-- JS --></div>
+  </div>
+
+  <!-- TOTAL VALUE -->
+  <div class="total-card">
+    <div class="total-label">Total Portofolio</div>
+    <div class="total-value" id="totalValue">Rp 0</div>
+    <div class="total-meta">
+      <div class="total-change pos" id="totalChange">+0%</div>
+      <div class="last-update" id="lastUpdate">Memuat harga…</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="chart-section">
+    <div class="chart-card">
+      <div class="card-title">Alokasi Aset</div>
+      <div class="donut-wrap">
+        <svg id="donutChart" viewBox="0 0 140 140"></svg>
+        <div class="donut-center">
+          <div class="dc-label">Aset</div>
+          <div class="dc-val" id="totalAssets">0</div>
+        </div>
+      </div>
+      <div class="legend" id="donutLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">Bobot Kategori</div>
+      <div class="bar-list" id="barList"></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('all',this)"><span class="tab-icon">📊</span>Semua</button>
+    <button class="tab-btn" onclick="switchTab('crypto',this)"><span class="tab-icon">₿</span>Crypto</button>
+    <button class="tab-btn" onclick="switchTab('gold',this)"><span class="tab-icon">🪙</span>Emas</button>
+    <button class="tab-btn" onclick="switchTab('stock',this)"><span class="tab-icon">📈</span>Saham</button>
+    <button class="tab-btn" onclick="switchTab('savings',this)"><span class="tab-icon">🏦</span>Tabungan</button>
+    <button class="tab-btn" onclick="switchTab('cash',this)"><span class="tab-icon">💵</span>Kas</button>
+  </div>
+
+  <!-- ADD BUTTON -->
+  <div class="assets-header">
+    <div class="assets-title" id="assetTabLabel">Semua Aset</div>
+    <button class="btn-add" onclick="openModal()">＋ Tambah</button>
+  </div>
+
+  <!-- SAVINGS INFO -->
+  <div class="savings-info" id="savingsInfoBox" style="display:none">
+    <div class="si-icon">💰</div>
+    <div class="si-text">
+      <div class="si-label">Bunga Tabungan (rata-rata / bulan)</div>
+      <div class="si-rate" id="avgRateLabel">— % / bulan</div>
+    </div>
+    <div>
+      <div class="si-label" style="text-align:right">Bunga Terkumpul</div>
+      <div class="si-earned" id="totalInterest">Rp 0</div>
+    </div>
+  </div>
+
+  <!-- ASSET LIST -->
+  <div id="assetList"></div>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay" onclick="closeOnOverlay(event)">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">Tambah Aset Baru</div>
+      <input type="hidden" id="editId">
+
+      <div class="form-group">
+        <label class="form-label">Kategori</label>
+        <select class="form-select" id="fCategory" onchange="onCategoryChange()">
+          <option value="crypto">₿ Crypto</option>
+          <option value="gold">🪙 Emas</option>
+          <option value="stock">📈 Saham (IDX)</option>
+          <option value="savings">🏦 Tabungan</option>
+          <option value="cash">💵 Kas</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="fNameGroup">
+        <label class="form-label">Nama / Simbol</label>
+        <input class="form-input" id="fName" placeholder="e.g. BTC, ETH, SOL" list="symbolSuggest">
+        <datalist id="symbolSuggest"></datalist>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="fAmountLabel">Jumlah</label>
+          <input class="form-input" id="fAmount" type="number" step="any" placeholder="0">
+        </div>
+        <div class="form-group" id="fCurrencyGroup" style="display:none">
+          <label class="form-label">Satuan</label>
+          <select class="form-select" id="fCurrency">
+            <option value="IDR">IDR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" id="fBuyPriceGroup">
+        <label class="form-label" id="fBuyPriceLabel">Harga Beli (per unit, IDR)</label>
+        <input class="form-input" id="fBuyPrice" type="number" step="any" placeholder="0">
+      </div>
+
+      <div class="form-group" id="fMonthsGroup" style="display:none">
+        <label class="form-label">Durasi Menabung (bulan)</label>
+        <input class="form-input" id="fMonths" type="number" placeholder="0" min="0">
+      </div>
+
+      <div class="form-group" id="fRateGroup" style="display:none">
+        <label class="form-label">Bunga per Bulan (%)</label>
+        <input class="form-input" id="fRate" type="number" step="0.01" placeholder="contoh: 0.5" min="0" max="100">
+        <div class="form-hint">Contoh: BCA 0.33% / bulan, Deposito ~0.5% / bulan</div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Batal</button>
+        <button class="btn-save" onclick="saveAsset()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+let assets = JSON.parse(localStorage.getItem('porto_assets') || '[]');
+let prices = {};
+let usdIdr  = 16400; // Apr 2025 fallback
+let activeTab  = 'all';
+let editMode   = false;
+let tickerData = []; // {name, val, chg}
+
+const CATEGORY_META = {
+  crypto:  { label: 'Crypto',    icon: '₿',  color: '#7c5cfc' },
+  gold:    { label: 'Emas',      icon: '🪙', color: '#f5c842' },
+  stock:   { label: 'Saham',     icon: '📈', color: '#3b82f6' },
+  savings: { label: 'Tabungan',  icon: '🏦', color: '#34d399' },
+  cash:    { label: 'Kas',       icon: '💵', color: '#6e6e9a' },
+};
+
+// CoinGecko IDs -> symbol (LENGKAP)
+const CRYPTO_MAP = {
+  bitcoin:          'BTC',
+  ethereum:         'ETH',
+  binancecoin:      'BNB',
+  solana:           'SOL',
+  ripple:           'XRP',
+  cardano:          'ADA',
+  dogecoin:         'DOGE',
+  polkadot:         'DOT',
+  'shiba-inu':      'SHIB',
+  avalanche:        'AVAX',
+  chainlink:        'LINK',
+  'matic-network':  'MATIC',
+  uniswap:          'UNI',
+  litecoin:         'LTC',
+  'bitcoin-cash':   'BCH',
+  tron:             'TRX',
+  stellar:          'XLM',
+  near:             'NEAR',
+  aptos:            'APT',
+  sui:              'SUI',
+  pepe:             'PEPE',
+  bonk:             'BONK',
+  'internet-computer': 'ICP',
+  filecoin:         'FIL',
+  cosmos:           'ATOM',
+  'arbitrum':       'ARB',
+  optimism:         'OP',
+  'injective-protocol': 'INJ',
+  render:           'RNDR',
+  'fetch-ai':       'FET',
+  'the-sandbox':    'SAND',
+  decentraland:     'MANA',
+  aave:             'AAVE',
+  maker:            'MKR',
+  'the-graph':      'GRT',
+  'lido-dao':       'LDO',
+  'curve-dao-token':'CRV',
+  floki:            'FLOKI',
+  worldcoin:        'WLD',
+  sei:              'SEI',
+  'starknet':       'STRK',
+  jupiter:          'JUP',
+  'pyth-network':   'PYTH',
+  'jito-governance-token': 'JTO',
+};
+
+let goldPriceIDR = 1850000; // fallback Apr 2025 (harga emas ~$3200/oz)
+let stockPrices  = {};
+
+// ============================================================
+// FETCH PRICES
+// ============================================================
+async function fetchPrices() {
+  // 1. USD/IDR
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (r.ok) {
+      const d = await r.json();
+      usdIdr = d.rates?.IDR || usdIdr;
+      document.getElementById('rateLabel').textContent = `USD ${fmt(usdIdr,0)}`;
+    }
+  } catch(e) {}
+
+  // 2. Crypto via CoinGecko (with change 24h)
+  try {
+    const ids = Object.keys(CRYPTO_MAP).join(',');
+    const r = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      for (const [id, sym] of Object.entries(CRYPTO_MAP)) {
+        if (d[id]?.usd) {
+          prices[sym] = d[id].usd * usdIdr;
+          prices[sym + '_chg'] = d[id].usd_24h_change || 0;
+        }
+      }
+    }
+  } catch(e) {}
+
+  // 3. Gold
+  await fetchGoldPrice();
+
+  updateLastUpdate();
+  renderAll();
+}
+
+async function fetchGoldPrice() {
+  // Source A: goldprice.org
+  try {
+    const r = await fetch('https://data-asg.goldprice.org/dbXRates/USD');
+    if (r.ok) {
+      const d = await r.json();
+      const usdPerOz = d?.items?.[0]?.xauPrice;
+      if (usdPerOz > 1000) {
+        goldPriceIDR = (usdPerOz / 31.1035) * usdIdr;
+        prices['XAU'] = goldPriceIDR;
+        return;
+      }
+    }
+  } catch(e) {}
+  // Source B: PAXG via CoinGecko
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true');
+    if (r.ok) {
+      const d = await r.json();
+      const usdPerOz = d?.['pax-gold']?.usd;
+      if (usdPerOz > 1000) {
+        goldPriceIDR = (usdPerOz / 31.1035) * usdIdr;
+        prices['XAU'] = goldPriceIDR;
+        prices['XAU_chg'] = d?.['pax-gold']?.usd_24h_change || 0;
+        return;
+      }
+    }
+  } catch(e) {}
+  prices['XAU'] = goldPriceIDR;
+}
+
+function updateLastUpdate() {
+  const n = new Date();
+  document.getElementById('lastUpdate').textContent =
+    `Diperbarui ${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`;
+}
+
+// ============================================================
+// ASSET VALUE CALC
+// ============================================================
+function getAssetValueIDR(a) {
+  if (a.category === 'cash') return a.currency === 'USD' ? a.amount * usdIdr : a.amount;
+  if (a.category === 'savings') {
+    const rate = (a.interestRate || 0.5) / 100;
+    const total = a.amount * Math.pow(1 + rate, a.months || 0);
+    return a.currency === 'USD' ? total * usdIdr : total;
+  }
+  if (a.category === 'gold') return a.amount * (prices['XAU'] || goldPriceIDR);
+  if (a.category === 'crypto') {
+    const p = prices[a.symbol?.toUpperCase()];
+    return p ? a.amount * p : a.amount * (a.manualPrice || 0);
+  }
+  if (a.category === 'stock') {
+    const p = stockPrices[a.symbol?.toUpperCase()] || a.manualPrice || 0;
+    return a.amount * 100 * p;
+  }
+  return 0;
+}
+function getBuyValueIDR(a) {
+  if (!a.buyPrice) return 0;
+  if (a.category === 'gold')   return a.amount * a.buyPrice;
+  if (a.category === 'crypto') return a.amount * a.buyPrice;
+  if (a.category === 'stock')  return a.amount * 100 * a.buyPrice;
+  return a.buyPrice;
+}
+function getPnLPct(a) {
+  const cur = getAssetValueIDR(a), buy = getBuyValueIDR(a);
+  if (!buy) return null;
+  return ((cur - buy) / buy) * 100;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll() {
+  renderTotal(); renderDonut(); renderBars(); renderAssets(); renderTicker();
+}
+
+function fmt(n, dec=0) {
+  if (isNaN(n) || n === null) return '0';
+  if (n >= 1e12) return (n/1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return (n/1e9).toFixed(1) + 'M';
+  if (n >= 1e6)  return (n/1e6).toFixed(1) + 'Jt';
+  return new Intl.NumberFormat('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(n);
+}
+function fmtFull(n) {
+  return 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(n));
+}
+
+function renderTotal() {
+  const total    = assets.reduce((s,a) => s + getAssetValueIDR(a), 0);
+  const totalBuy = assets.reduce((s,a) => s + getBuyValueIDR(a),   0);
+  document.getElementById('totalValue').textContent  = fmtFull(total);
+  document.getElementById('totalAssets').textContent = assets.length;
+  const el = document.getElementById('totalChange');
+  if (totalBuy > 0) {
+    const pct = ((total - totalBuy) / totalBuy * 100).toFixed(2);
+    el.textContent = (parseFloat(pct)>=0?'+':'')+pct+'%';
+    el.className   = 'total-change '+(parseFloat(pct)>=0?'pos':'neg');
+  } else {
+    el.textContent = '+0.00%'; el.className = 'total-change pos';
+  }
+}
+
+function renderDonut() {
+  const cats = ['crypto','gold','stock','savings','cash'];
+  const vals = {}; let total = 0;
+  cats.forEach(c => { vals[c] = assets.filter(a=>a.category===c).reduce((s,a)=>s+getAssetValueIDR(a),0); total+=vals[c]; });
+  const svg = document.getElementById('donutChart');
+  svg.innerHTML = '';
+  const cx=70,cy=70,r=56,ir=38;
+  let start = -Math.PI/2;
+  if (total===0) {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',cx); circle.setAttribute('cy',cy); circle.setAttribute('r',r);
+    circle.setAttribute('fill','none'); circle.setAttribute('stroke','#1a1a2e'); circle.setAttribute('stroke-width','18');
+    svg.appendChild(circle);
+    document.getElementById('donutLegend').innerHTML=''; document.getElementById('barList').innerHTML=''; return;
+  }
+  const legendEl = document.getElementById('donutLegend');
+  legendEl.innerHTML = '';
+  cats.forEach(c => {
+    const val = vals[c]; if (!val) return;
+    const pct = val/total, angle = pct*Math.PI*2, end = start+angle, gap=0.035;
+    const x1=cx+Math.cos(start+gap)*r, y1=cy+Math.sin(start+gap)*r;
+    const x2=cx+Math.cos(end-gap)*r,   y2=cy+Math.sin(end-gap)*r;
+    const x3=cx+Math.cos(end-gap)*ir,  y3=cy+Math.sin(end-gap)*ir;
+    const x4=cx+Math.cos(start+gap)*ir,y4=cy+Math.sin(start+gap)*ir;
+    const large = angle>Math.PI?1:0;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${x3},${y3} A${ir},${ir} 0 ${large},0 ${x4},${y4} Z`);
+    path.setAttribute('fill', CATEGORY_META[c].color);
+    path.setAttribute('opacity','0.92');
+    svg.appendChild(path); start=end;
+    const li = document.createElement('div');
+    li.className='legend-item';
+    li.innerHTML=`<div class="legend-dot" style="background:${CATEGORY_META[c].color}"></div><span class="legend-name">${CATEGORY_META[c].label}</span><span class="legend-pct">${(pct*100).toFixed(1)}%</span>`;
+    legendEl.appendChild(li);
+  });
+}
+
+function renderBars() {
+  const cats = ['crypto','gold','stock','savings','cash'];
+  const vals = {}; let total = 0;
+  cats.forEach(c => { vals[c]=assets.filter(a=>a.category===c).reduce((s,a)=>s+getAssetValueIDR(a),0); total+=vals[c]; });
+  const el = document.getElementById('barList');
+  if (total===0) { el.innerHTML='<div class="empty"><p>Belum ada data</p></div>'; return; }
+  el.innerHTML = cats.map(c => {
+    const pct = total>0?(vals[c]/total*100):0;
+    return `<div class="bar-item">
+      <div class="bar-header">
+        <span class="bar-name">${CATEGORY_META[c].icon} ${CATEGORY_META[c].label}</span>
+        <span class="bar-val">Rp ${fmt(vals[c])}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${CATEGORY_META[c].color}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAssets() {
+  const filtered = activeTab==='all' ? assets : assets.filter(a=>a.category===activeTab);
+  const el = document.getElementById('assetList');
+  const sibEl = document.getElementById('savingsInfoBox');
+  if (activeTab==='savings') {
+    sibEl.style.display='flex';
+    const savAssets = assets.filter(a=>a.category==='savings');
+    const totalInt = savAssets.reduce((s,a) => {
+      const r = (a.interestRate||0.5)/100;
+      return s + (a.amount * Math.pow(1+r, a.months||0) - a.amount);
+    }, 0);
+    document.getElementById('totalInterest').textContent = fmtFull(totalInt);
+    const totalP = savAssets.reduce((s,a)=>s+a.amount,0);
+    const avgR = totalP>0 ? savAssets.reduce((s,a)=>s+(a.interestRate||0.5)*a.amount,0)/totalP : 0;
+    document.getElementById('avgRateLabel').textContent = avgR>0 ? `${avgR.toFixed(2)}% / bulan` : '— % / bulan';
+  } else { sibEl.style.display='none'; }
+
+  if (filtered.length===0) {
+    el.innerHTML=`<div class="empty"><div class="e-icon">📭</div><p>Belum ada aset di kategori ini.<br>Tap tombol + untuk menambahkan.</p></div>`;
+    return;
+  }
+  if (activeTab==='all') {
+    let html='';
+    ['crypto','gold','stock','savings','cash'].forEach(cat => {
+      const items = assets.filter(a=>a.category===cat);
+      if (!items.length) return;
+      html += `<div class="section-label">${CATEGORY_META[cat].icon} ${CATEGORY_META[cat].label}</div>`;
+      html += items.map(a=>assetCardHTML(a)).join('');
+    });
+    el.innerHTML = html;
+  } else {
+    el.innerHTML = filtered.map(a=>assetCardHTML(a)).join('');
+  }
+}
+
+function assetCardHTML(a) {
+  const val = getAssetValueIDR(a), pnl = getPnLPct(a), meta = CATEGORY_META[a.category];
+  let sub = '';
+  if (a.category==='crypto') {
+    const p = prices[a.symbol?.toUpperCase()] || a.manualPrice || 0;
+    sub = `${a.amount} ${a.symbol?.toUpperCase()} · Rp ${fmt(p)}/unit`;
+  } else if (a.category==='gold') {
+    const p = prices['XAU'] || goldPriceIDR;
+    sub = `${a.amount} gram · Rp ${fmt(p)}/gram`;
+  } else if (a.category==='stock') {
+    const p = stockPrices[a.symbol?.toUpperCase()] || a.manualPrice || 0;
+    sub = `${a.amount} lot · Rp ${fmt(p)}/lembar`;
+  } else if (a.category==='savings') {
+    sub = `${a.months||0} bulan · bunga ${(a.interestRate||0.5)}%/bln`;
+  } else if (a.category==='cash') {
+    sub = `${a.currency||'IDR'} ${fmt(a.amount, a.currency==='USD'?2:0)}`;
+  }
+  const pnlHtml = pnl!==null
+    ? `<span class="asset-change ${pnl>=0?'pos':'neg'}">${pnl>=0?'▲':'▼'} ${Math.abs(pnl).toFixed(2)}%</span>`
+    : `<span class="asset-change neu">—</span>`;
+  return `<div class="asset-card">
+    <div class="asset-icon" style="background:${meta.color}1a">${meta.icon}</div>
+    <div class="asset-info">
+      <div class="asset-name">${a.name||a.symbol||meta.label}</div>
+      <div class="asset-sub">${sub}</div>
+    </div>
+    <div class="asset-right">
+      <div class="asset-value-wrap">
+        <div class="asset-value">Rp ${fmt(val)}</div>
+        ${pnlHtml}
+      </div>
+    </div>
+    <div class="asset-actions">
+      <div class="btn-icon" onclick="openEdit('${a.id}')">✏️</div>
+      <div class="btn-icon del" onclick="deleteAsset('${a.id}')">🗑</div>
+    </div>
+  </div>`;
+}
+
+function renderTicker() {
+  // CRYPTO
+  const cryptoTickers = [
+    'BTC','ETH','BNB','SOL','XRP','ADA','DOGE','AVAX','MATIC','DOT',
+    'LINK','TRX','NEAR','APT','SUI','ARB','OP','INJ','RNDR','ATOM',
+    'UNI','LTC','BCH','XLM','GRT','AAVE','MKR','PEPE','FLOKI','WLD',
+  ];
+  // IDX SAHAM
+  const sahamTickers = [
+    {sym:'BBRI',name:'BBRI'},{sym:'BBCA',name:'BBCA'},{sym:'TLKM',name:'TLKM'},
+    {sym:'BMRI',name:'BMRI'},{sym:'ASII',name:'ASII'},{sym:'GOTO',name:'GOTO'},
+    {sym:'BYAN',name:'BYAN'},{sym:'ANTM',name:'ANTM'},{sym:'ADRO',name:'ADRO'},
+    {sym:'UNVR',name:'UNVR'},{sym:'ICBP',name:'ICBP'},{sym:'KLBF',name:'KLBF'},
+    {sym:'MDKA',name:'MDKA'},{sym:'EXCL',name:'EXCL'},{sym:'INDF',name:'INDF'},
+  ];
+
+  let items = [];
+  // USD/IDR
+  items.push({ name:'USD/IDR', val:`Rp ${fmt(usdIdr,0)}`, chg:null });
+  // Emas
+  const gp = prices['XAU'] || goldPriceIDR;
+  const gChg = prices['XAU_chg'] || 0;
+  items.push({ name:'EMAS/g', val:`Rp ${fmt(gp,0)}`, chg: gChg });
+  // Crypto
+  cryptoTickers.forEach(sym => {
+    const p = prices[sym], chg = prices[sym+'_chg']||0;
+    if (p) items.push({ name:sym, val:`Rp ${fmt(p)}`, chg });
+  });
+  // Saham IDX (use cached stock prices)
+  sahamTickers.forEach(s => {
+    const p = stockPrices[s.sym];
+    if (p) items.push({ name:s.name+'.JK', val:`Rp ${fmt(p)}`, chg:null });
+  });
+
+  const html = [...items, ...items].map(t => {
+    const chgHtml = t.chg !== null
+      ? `<span class="ticker-chg ${t.chg>=0?'up':'down'}">${t.chg>=0?'▲':'▼'}${Math.abs(t.chg).toFixed(1)}%</span>`
+      : '';
+    return `<div class="ticker-item"><span class="ticker-name">${t.name}</span><span class="ticker-price">${t.val}</span>${chgHtml}</div>`;
+  }).join('');
+  document.getElementById('tickerScroll').innerHTML = html;
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels={all:'Semua Aset',crypto:'Crypto',gold:'Emas',stock:'Saham',savings:'Tabungan',cash:'Kas'};
+  document.getElementById('assetTabLabel').textContent = labels[tab];
+  renderAssets();
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function onCategoryChange() {
+  const cat = document.getElementById('fCategory').value;
+  const buyGrp    = document.getElementById('fBuyPriceGroup');
+  const monthsGrp = document.getElementById('fMonthsGroup');
+  const rateGrp   = document.getElementById('fRateGroup');
+  const amtLabel  = document.getElementById('fAmountLabel');
+  const curGrp    = document.getElementById('fCurrencyGroup');
+  const nameGrp   = document.getElementById('fNameGroup');
+  const buyLabel  = document.getElementById('fBuyPriceLabel');
+  const datalist  = document.getElementById('symbolSuggest');
+
+  monthsGrp.style.display='none'; rateGrp.style.display='none';
+  buyGrp.style.display='block'; curGrp.style.display='none'; nameGrp.style.display='block';
+
+  if (cat==='gold') {
+    amtLabel.textContent='Jumlah (gram)'; buyLabel.textContent='Harga Beli per Gram (IDR)';
+    document.getElementById('fName').value='Emas'; nameGrp.style.display='none';
+  } else if (cat==='stock') {
+    amtLabel.textContent='Jumlah (lot)'; buyLabel.textContent='Harga Beli per Lembar (IDR)';
+    document.getElementById('fName').placeholder='e.g. BBRI, BBCA, TLKM, GOTO';
+    datalist.innerHTML='';
+  } else if (cat==='crypto') {
+    amtLabel.textContent='Jumlah (koin)'; buyLabel.textContent='Harga Beli per Unit (IDR)';
+    document.getElementById('fName').placeholder='e.g. BTC, ETH, SOL, BNB';
+    datalist.innerHTML = Object.values(CRYPTO_MAP).map(s=>`<option value="${s}">`).join('');
+  } else if (cat==='savings') {
+    amtLabel.textContent='Pokok Tabungan (IDR)';
+    document.getElementById('fName').placeholder='e.g. BCA, Mandiri';
+    buyGrp.style.display='none'; monthsGrp.style.display='block';
+    rateGrp.style.display='block'; curGrp.style.display='block'; datalist.innerHTML='';
+  } else if (cat==='cash') {
+    amtLabel.textContent='Jumlah';
+    document.getElementById('fName').placeholder='e.g. Dompet, OVO, GoPay';
+    buyGrp.style.display='none'; curGrp.style.display='block'; datalist.innerHTML='';
+  }
+}
+
+function openModal() {
+  editMode=false; document.getElementById('editId').value='';
+  document.getElementById('modalTitle').textContent='Tambah Aset Baru';
+  document.getElementById('fCategory').value='crypto';
+  document.getElementById('fName').value='';
+  document.getElementById('fAmount').value='';
+  document.getElementById('fBuyPrice').value='';
+  document.getElementById('fMonths').value='';
+  document.getElementById('fRate').value='';
+  document.getElementById('fCurrency').value='IDR';
+  onCategoryChange();
+  document.getElementById('overlay').classList.add('show');
+}
+
+function openEdit(id) {
+  const a=assets.find(x=>x.id===id); if (!a) return;
+  editMode=true; document.getElementById('editId').value=id;
+  document.getElementById('modalTitle').textContent='Edit Aset';
+  document.getElementById('fCategory').value=a.category;
+  onCategoryChange();
+  document.getElementById('fName').value=a.name||a.symbol||'';
+  document.getElementById('fAmount').value=a.amount;
+  document.getElementById('fBuyPrice').value=a.buyPrice||'';
+  document.getElementById('fMonths').value=a.months||'';
+  document.getElementById('fRate').value=a.interestRate||'';
+  document.getElementById('fCurrency').value=a.currency||'IDR';
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('show'); }
+function closeOnOverlay(e) { if (e.target===document.getElementById('overlay')) closeModal(); }
+
+function saveAsset() {
+  const cat     = document.getElementById('fCategory').value;
+  const name    = document.getElementById('fName').value.trim();
+  const amount  = parseFloat(document.getElementById('fAmount').value);
+  const buyPrice= parseFloat(document.getElementById('fBuyPrice').value)||0;
+  const months  = parseInt(document.getElementById('fMonths').value)||0;
+  const rate    = parseFloat(document.getElementById('fRate').value)||0.5;
+  const currency= document.getElementById('fCurrency').value;
+  if (!amount||amount<=0) { showToast('⚠️ Masukkan jumlah yang valid'); return; }
+  if (cat==='savings'&&rate<=0) { showToast('⚠️ Masukkan bunga yang valid'); return; }
+  const id = document.getElementById('editId').value || Date.now().toString();
+  const asset = { id, category:cat, amount, buyPrice, currency };
+  if (cat==='gold') {
+    asset.name='Emas'; asset.symbol='XAU';
+  } else if (cat==='crypto') {
+    asset.symbol=name.toUpperCase(); asset.name=name.toUpperCase(); asset.manualPrice=buyPrice;
+  } else if (cat==='stock') {
+    asset.symbol=name.toUpperCase(); asset.name=name.toUpperCase(); asset.manualPrice=buyPrice;
+    fetchStockPrice(name.toUpperCase());
+  } else if (cat==='savings') {
+    asset.name=name||'Tabungan'; asset.months=months; asset.interestRate=rate;
+  } else { asset.name=name||'Kas'; }
+
+  if (editMode) { const idx=assets.findIndex(x=>x.id===id); if (idx>-1) assets[idx]=asset; }
+  else { assets.push(asset); }
+  save(); closeModal(); renderAll();
+  showToast(editMode?'✅ Aset diperbarui':'✅ Aset ditambahkan');
+}
+
+function deleteAsset(id) {
+  if (!confirm('Hapus aset ini?')) return;
+  assets=assets.filter(a=>a.id!==id); save(); renderAll(); showToast('🗑 Aset dihapus');
+}
+function save() { localStorage.setItem('porto_assets', JSON.stringify(assets)); }
+
+// ============================================================
+// STOCK PRICE (Yahoo Finance via allorigins proxy)
+// ============================================================
+async function fetchStockPrice(symbol) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}.JK?interval=1d&range=1d`;
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxy);
+    if (res.ok) {
+      const data = await res.json();
+      const parsed = JSON.parse(data.contents);
+      const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (price) { stockPrices[symbol]=price; renderAll(); }
+    }
+  } catch(e) {}
+}
+
+async function initStocks() {
+  // Load IDX watchlist + user stocks
+  const watchlist = ['BBRI','BBCA','TLKM','BMRI','ASII','GOTO','BYAN','ANTM','ADRO','UNVR','ICBP','KLBF','MDKA','EXCL','INDF'];
+  const userStocks = assets.filter(a=>a.category==='stock').map(a=>a.symbol);
+  const all = [...new Set([...watchlist,...userStocks])];
+  for (const s of all) { await fetchStockPrice(s); }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+assets = assets.map(a => {
+  if (a.category==='savings' && !a.interestRate) a.interestRate=0.5;
+  return a;
+});
+save();
+fetchPrices();
+initStocks();
+setInterval(fetchPrices, 60000);
+renderAll();
+</script>
+</body>
+</html>
